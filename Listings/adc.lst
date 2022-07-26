@@ -1,0 +1,128 @@
+C51 COMPILER V9.56.0.0   ADC                                                               08/13/2021 14:49:56 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE ADC
+OBJECT MODULE PLACED IN .\Objects\adc.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE adc.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings
+                    -\adc.lst) TABS(2) OBJECT(.\Objects\adc.obj)
+
+line level    source
+
+*** WARNING C500 IN LINE 1 OF adc.c: LICENSE ERROR (R203(1): EVALUATION PERIOD EXPIRED)
+
+   1          /***************************************************************************/
+   2          /*                                                                         */
+   3          /*    A simple program to set port values and output them                  */
+   4          /*                                                                         */
+   5          /***************************************************************************/
+   6          
+   7          
+   8          /***  Include Files  *******************************************************/
+   9          
+  10          #include <t89c51ac3.h>
+  11          #include "phys340libkeil.h"
+  12          #include <string.h>
+  13          #include <stdio.h>
+  14          #include <math.h>
+  15          
+  16          const char BlankString[] = "                               ";
+  17          char outputText [33];
+  18          int buff[100];
+  19          unsigned int position = 0; //buffer update position
+  20          unsigned int inLine = 0; //buffer send position
+  21          char * txt = "C";
+  22          char buffer[33];
+  23          
+  24          int i; 
+  25          float adcValue = 0; 
+  26          unsigned int ticks = 0;
+  27          //timer 0 is at 1954Hz
+  28          unsigned int offTime = 3600;//3686; //Timer0 off time 4000 ticks; * 0.9 *1.024
+  29          unsigned int bufferSize = 10; /**if bufferSize = buffer.size() then update it as well*/
+  30          //unsigned int timecollab = 0;
+  31          /***  Function to sample an analog voltage  ********************************/
+  32          
+  33          void myIntHandler(void) interrupt 1
+  34          {
+  35   1        ticks++;
+  36   1        P1_3 = ~P1_3;
+  37   1      }
+  38          
+  39          void initTimer(){
+  40   1        IEN0 = 0x82; /**enable all interrupt bit timer 0 overflow interrupt enable bit 1000 0010*/
+  41   1        TMOD |= 0x02; /**mode 2 8 bit auto reload 0000 0010* don't override tmod*/
+  42   1        TH0 = 0x00; 
+  43   1        
+  44   1        TCON |= 0x10 ; //start timer 0 doesn't override tcon register level trigger
+  45   1      }
+  46          
+  47          
+  48          /**return temperature from ADC sample*/
+  49          
+  50          float recalibration(){
+  51   1        float y;
+  52   1        y = sampleADC() * -0.1097 + 82.002;
+  53   1        adcValue = y;
+C51 COMPILER V9.56.0.0   ADC                                                               08/13/2021 14:49:56 PAGE 2   
+
+  54   1      }
+*** WARNING C173 IN LINE 54 OF adc.c: missing return-expression
+  55          
+  56          /**display Temperature */
+  57          void displayTemp(){
+  58   1        clearLCD();
+  59   1        recalibration(); //calibrates the system to show adc to temp value 
+  60   1        sprintf(outputText,"%.2f %c",   adcValue, 'T');
+  61   1        setLCDPos(0);
+  62   1        
+  63   1        writeLineLCD(outputText);
+  64   1      
+  65   1      }
+  66          
+  67          /**  Main Function  ********************************************************/
+  68          
+  69          
+  70          void main()
+  71          { 
+  72   1        initLCD();
+  73   1        initTimer();
+  74   1        initSerial(1200); //1.2kHz baud rate
+  75   1         
+  76   1        while(1){
+  77   2          if(ticks >= offTime){
+  78   3            //P1 = 0x01; /** interrupt on*/
+  79   3            displayTemp();//displays temperature reading 
+  80   3            buff[position] = sampleADC();
+  81   3            sprintf(buffer,"%d", buff[position]);
+  82   3            
+  83   3            if(readCharSerial() == 'a'){
+  84   4              for(i = 0; i < bufferSize; i++){
+  85   5                sprintf(buffer,"%d", buff[i]);
+  86   5                writeLineSerial(buffer);
+  87   5              }
+  88   4            }
+  89   3            else{writeLineSerial(buffer);} //adcvalue
+  90   3            
+  91   3            position++;
+  92   3            //if(position >= 100){ position =0;} 
+  93   3          }
+  94   2          
+  95   2        }
+  96   1      
+  97   1      }
+  98          
+*** WARNING C290 IN LINE 54 OF adc.c: missing return value
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    406    ----
+   CONSTANT SIZE    =     13    ----
+   XDATA SIZE       =    317    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

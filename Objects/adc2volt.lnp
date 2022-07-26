@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+"H:\8051labcode\lib\phys340libkeil.obj",
+".\Objects\adc.obj" 
+TO ".\Objects\adc2volt" 
+PRINT(".\Listings\adc2volt.m51") RAMSIZE(256) 
